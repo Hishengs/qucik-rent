@@ -1,0 +1,23 @@
+{
+  "name": "quickrent",
+  "version": "1.0.0",
+  "description": "a room rent helper",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hisheng",
+  "license": "MIT",
+  "dependencies": {
+    "heysoo": "0.0.5",
+    "ioredis": "^3.2.1",
+    "node-schedule": "^1.2.5",
+    "puppeteer": "^0.13.0"
+  },
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0"
+  }
+}
