@@ -12,7 +12,7 @@ const getTopics = function(){
 	  	const fetcher = new Fetcher({
 	  		fetchedTopics: topics // 用于 fetcher 判重
 	  	});
-	  	const fetchPages = 5; // 爬取的页数
+	  	const fetchPages = 1; // 爬取的页数
 	  	fetcher.fetchGroup(city.shenzhen.nanshan.nanshanzufang.url, fetchPages).then(topics => {
 				console.log(`>>> All ${Object.getOwnPropertyNames(topics).length} topics fetched`);
 				redis.del(city.shenzhen.nanshan.nanshanzufang.key); // 删除旧的数据
