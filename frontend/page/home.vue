@@ -1,15 +1,12 @@
 <template>
 	<div id="home">
-		<!-- <Menu mode="horizontal" theme="light">
-			<MenuItem name="site-name">Quick Rent</MenuItem>
-		</Menu> -->
 		<div class="banner">
 			<span class="left">
 				<span class="button-link site-name" onclick="window.location.href='/';">豆瓣快租</span>
 				<span class="slogan">远离中介，帮你快速租房</span>
 			</span>
 			<span class="right">
-				<span class="button-link city" title="点击切换城市">[深圳]</span>
+				<span class="button-link city" title="点击切换城市" @click="showCitySelector=true;">[{{ (currentCity && currentCity.name) || '未选择城市' }}]</span>
 				<span class="button-link login" title="点击登录">登录</span>
 				<span class="button-link leave-message" title="留下你的意见">留言</span>
 				<span class="button-link about" @click="showAbout=true;" title="建站初衷">关于</span>
@@ -35,49 +32,25 @@
 			</div>
 		</div>
 		<!-- 过滤器设置 -->
-		<Modal v-model="showFilter" title="过滤器设置">
-			<Form>
-				<FormItem label="仅限女生">
-					<Select v-model="filterSetting.femaleOnly">
-						<Option :value="0" label="不限"></Option>
-						<Option :value="1" label="仅限女生"></Option>
-					</Select>
-					<Tag>注：作为一名男生，我也深感无奈啊</Tag>
-				</FormItem>
-				<FormItem label="最大评论数">
-					<Input type="text" v-model="filterSetting.maxComments" placeholder="最大评论数"></Input>
-				</FormItem>
-				<FormItem label="最大收藏数">
-					<Input type="text" v-model="filterSetting.maxLikes" placeholder="最大收藏数"></Input>
-				</FormItem>
-				<FormItem label="关键词黑名单">
-					<Input type="text" v-model="filterSetting.keywords" placeholder="关键词以#分隔"></Input>
-					例如：<Tag>自如</Tag><Tag>拎包入住</Tag>
-				</FormItem>
-				<FormItem label="用户黑名单">
-					<Input type="text" v-model="filterSetting.userBlackList" placeholder="用户名以#分隔"></Input>
-					例如：<Tag>老王</Tag><Tag>行者孙</Tag>
-				</FormItem>
-			</Form>
-			<Tag>注：登录后可保存你的过滤器设置。</Tag>
-			<div slot="footer">
-				<Button type="text" @click="showFilter=false;">取消</Button>
-				<Button type="primary" @click="saveFilter">保存</Button>
-			</div>
-		</Modal>
+		<filter-modal v-model="showFilter"></filter-modal>
 		<!-- 关于网站 -->
-		<Modal v-model="showAbout" title="关于网站">
-			<div style="font-size: 14px; line-height: 1.5;">
-				<p>　　创建这个网站的初衷很简单，就是在豆瓣找房子时被各种中介和混乱的信息搞得很烦，于是，作为一名程序员，我觉得有必要利用自己的专业技能为大家造点福利。</p>
-				<p>　　愿我们租房子的路上少点中介。</p>
-			</div>
-		</Modal>
+		<about-modal v-model="showAbout"></about-modal>
+		<!-- 城市选择 -->
+		<city-selector v-model="showCitySelector"></city-selector>
 	</div>
 </template>
 
 <script>
+	import citySelector from './modal/city-selector.vue';
+	import aboutModal from './modal/about.vue';
+	import filterModal from './modal/filter-modal.vue';
 	export default {
 		name: 'home',
+		components: {
+			citySelector,
+			aboutModal,
+			filterModal,
+		},
 		data (){
 			return {
 				totalTopics: [],
@@ -167,23 +140,26 @@
 					],
 					data: []
 				},
+				// 当前已选的城市
+				currentCity: {},
 				// 过滤器
 				showFilter: false,
-				filterSetting: {
-					femaleOnly: 0,
-					maxComments: 50,
-					maxLikes: 100,
-					keywords: '',
-					userBlackList: ''
-				},
+				// 可选小组
 				showAbout: false,
+				// 显示城市选择
+				showCitySelector: false,
 			};
 		},
 		activated (){
-			this.getTopics()
+			this.getTopics();
 		},
 		methods: {
 			getTopics (){
+				const condition = {
+					city: '', // 城市
+					group: '', // 小组
+					filterSetting: this.filterSetting,
+				};
 				this.api.group.getTopics().then(res => {
 					console.log(res);
 					if(res.data.err.level < 3){
@@ -224,11 +200,6 @@
 			cleanSearcher (){
 				this.searcher.keyword = '';
 				this.topicTable.data = this.searcher.originalList;
-			},
-			// 保存过滤器设置
-			saveFilter (){
-				this.getTopics();
-				this.showFilter = false;
 			},
 		}
 	};

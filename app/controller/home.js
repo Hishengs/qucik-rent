@@ -7,7 +7,7 @@ module.exports = (app) => {
     }
 
     async getTopics (){
-      let topics = await this.ctx.redis.get(this.ctx.city.shenzhen.nanshan.nanshanzufang.key);
+      let topics = await this.ctx.redis.get(this.ctx.cities[0]['groups'][0].key);
       topics = topics ? JSON.parse(topics) : {};
       const originalTopicsNum = Object.getOwnPropertyNames(topics).length;
       const filteredTopics = this.ctx.service.filter.filter(topics);
@@ -17,6 +17,10 @@ module.exports = (app) => {
         filteredTopicsNum,
         filteredTopics
       });
+    }
+
+    getCities (){
+      this.ctx.done(this.ctx.cities);
     }
 
   }

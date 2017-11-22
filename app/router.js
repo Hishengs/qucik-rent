@@ -6,6 +6,7 @@ module.exports = app => {
 		prefix: '/api'
 	}, router => {
 		router.post('/topics', 'home.getTopics');
+		router.post('/cities', 'home.getCities');
 	});
 	
 };
