@@ -17,6 +17,7 @@ class Fetcher {
 		if(!this.inited){
 			this.browser = await puppeteer.launch();
 			this.page = await this.browser.newPage();
+			this.inited = true;
 		}
 	}
 
@@ -25,15 +26,11 @@ class Fetcher {
 		await this.browser.close();
 	}
 
-	// async close (){
-	// 	await this.browser.close();
-	// }
-
 	/*
 		desc: 			反反爬虫 随机休眠 0-3000 ms
 	*/
 	async randomSleep (multiple = 1){
-		const ms = parseInt(Math.random() * 3000 * multiple);
+		const ms = parseInt(Math.random() * 2000 * multiple);
 		this.printLog(`sleep for ${ms} ms`);
 		return new Promise((resolve, reject) => {
 			setTimeout(() => {
@@ -68,17 +65,17 @@ class Fetcher {
 	*/
 	async fetchGroup (url = 'https://www.douban.com/group/nanshanzufang/', pageNum = 10, numPerPage = 25, ){
 		await this.init();
-		this.printLog('fetching group: ' + url + '\n');
+		this.printLog('======== group: ' + url + ' =========\n');
 		// 1. fetch pages
 		let topics = [];
 		for(let i=0; i<pageNum; i++){
 			let startUrl = url + 'discussion?start=' + (i * numPerPage || 1);
-			this.printLog(`fetching page[${i+1}]: \n` + startUrl);
+			this.printLog(`======== page[${i+1}]: =========\n` + startUrl);
 			let tempTopics = await this.fetchPage(startUrl);
 			if(tempTopics !== null){
 				topics = topics.concat(tempTopics);
 			}
-			this.printLog(`fetching page[${i+1}]: done\n`);
+			this.printLog(`======== page[${i+1}]: done =========\n`);
 			await this.randomSleep(1.5);
 		}
 		// 2. transfer to map
@@ -87,7 +84,7 @@ class Fetcher {
 			topicsMap[topic.id] = topic;
 		});
 		await this.close();
-		this.printLog('fetching group: done\n');
+		this.printLog('========= group: done =========\n');
 		return topicsMap;
 	}
 
@@ -96,7 +93,7 @@ class Fetcher {
 		url: 				指定页网址
 	*/
 	async fetchPage(url = 'https://www.douban.com/group/nanshanzufang/discussion?start=1', ){
-		await this.init();
+		this.page = await this.browser.newPage();
 	  await this.antiAnti();
 	  const response = await this.page.goto(url);
 	  if(this.pageAvailable(url, response)){
@@ -127,8 +124,8 @@ class Fetcher {
 			  	if(topic !== null){
 			  		topics.push(topic);
 			  	}
+			  	await this.randomSleep();
 		  	}
-		  	await this.randomSleep();
 		  }
 		  return topics;
 	  }else {
@@ -143,7 +140,6 @@ class Fetcher {
 		lastReplyTime: 	最新回复时间
 	*/
 	async fetchTopic(url, comments = 0, lastReplyTime){
-		await this.init();
 		await this.antiAnti();
 		this.printLog('fetching topic: \n' + url);
 		const id = url.match(/\d+/)[0];

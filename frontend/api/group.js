@@ -4,7 +4,7 @@ module.exports = {
 	// 获取帖子列表
   getTopics (condition){
     return new Promise((resolve, reject) => {
-      console.log('>>> [api.postData] 获取帖子列表');
+      console.log('>>> [api.postData] 获取帖子列表', condition);
       http.post(urlPrefix + '/topics', condition).then(res => {
         resolve(res);
       }).catch(reject);

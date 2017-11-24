@@ -16,40 +16,61 @@
 			<!-- 过滤器 -->
 			<div class="filter-bar">
 				<span class="left">
-					<Button type="primary" @click="getTopics">刷新</Button>
+					<Button type="primary" @click="getTopics()">刷新</Button>
 					<Button type="primary" @click="showFilter=true;">过滤器设置</Button>
 				</span>
+				<span class="center">
+					<span class="item">
+						屏蔽掉仅限女生 
+						<Select style="width: 80px;" v-model="filterSetting.femaleOnly">
+							<Option :value="0" label="不屏蔽"></Option>
+							<Option :value="1" label="屏蔽"></Option>
+						</Select>
+					</span>
+					<span class="item">
+						最大评论数 <Input type="text" placeholder="最大评论数" v-model="filterSetting.maxComments" style="width: 80px;"></Input>
+					</span>
+					<span class="item">
+						最大收藏数 <Input type="text" placeholder="最大喜欢数" v-model="filterSetting.maxLikes" style="width: 80px;"></Input>
+					</span>
+					<span class="item">
+						关键词黑名单 <Input type="text" placeholder="关键词以#分隔" v-model="filterSetting.keywords" style="width: 100px;"></Input>
+					</span>
+					<span class="item">
+						用户名黑名单 <Input type="text" placeholder="用户名以#分隔" v-model="filterSetting.userBlackList" style="width: 100px;"></Input>
+					</span>
+				</span>
 				<span class="right">
-					<Input v-model="searcher.keyword" placeholder="输入关键词查找" style="width: 200px"></Input>
+					<Input v-model="searcher.keyword" placeholder="输入关键词查找" style="width: 150px"></Input>
 					<Button type="text" v-show="searcher.keyword.trim()" @click="cleanSearcher">清空</Button>
 					<Button type="primary" :disabled="searcher.btn.disabled" @click="search">{{ searcher.btn.text }}</Button>
 				</span>
 			</div>
 			<div class="main">
 				<!-- 帖子列表 -->
-				<Table :columns="topicTable.columns" :data="topicTable.data"></Table>
+				<Table :columns="topicTable.columns" :data="topicTable.data" :loading="loading"></Table>
 				<Page :current="paginator.page" :total="paginator.total" :page-size="paginator.numPerPage" show-total class="paginator" @on-change="gotoPage" v-show="!searcher.keyword.trim()">总共为您找到 <b>{{paginator.total}}</b> 条租房帖子</Page>
 			</div>
 		</div>
 		<!-- 过滤器设置 -->
-		<filter-modal v-model="showFilter"></filter-modal>
+		<!-- <filter-modal v-model="showFilter" @on-confirm="onFilterConfirm"></filter-modal> -->
 		<!-- 关于网站 -->
 		<about-modal v-model="showAbout"></about-modal>
 		<!-- 城市选择 -->
-		<city-selector v-model="showCitySelector"></city-selector>
+		<city-selector v-model="showCitySelector" @on-confirm="onCitySelect"></city-selector>
 	</div>
 </template>
 
 <script>
 	import citySelector from './modal/city-selector.vue';
 	import aboutModal from './modal/about.vue';
-	import filterModal from './modal/filter-modal.vue';
+	// import filterModal from './modal/filter-modal.vue';
 	export default {
 		name: 'home',
 		components: {
 			citySelector,
 			aboutModal,
-			filterModal,
+			// filterModal,
 		},
 		data (){
 			return {
@@ -57,7 +78,7 @@
 				paginator: {
 					page: 1,
 					total: 0,
-					numPerPage: 12
+					numPerPage: 15
 				},
 				searcher: {
 					keyword: '',
@@ -140,10 +161,18 @@
 					],
 					data: []
 				},
+				loading: false,
 				// 当前已选的城市
 				currentCity: {},
 				// 过滤器
 				showFilter: false,
+				filterSetting: {
+					femaleOnly: 0,
+					maxComments: 50,
+					maxLikes: 100,
+					keywords: '',
+					userBlackList: ''
+				},
 				// 可选小组
 				showAbout: false,
 				// 显示城市选择
@@ -154,13 +183,17 @@
 			this.getTopics();
 		},
 		methods: {
-			getTopics (){
-				const condition = {
-					city: '', // 城市
-					group: '', // 小组
-					filterSetting: this.filterSetting,
-				};
-				this.api.group.getTopics().then(res => {
+			getTopics (condition = {}){
+				condition = Object.assign({}, {
+					city: 'shenzhen',
+					group: 'city.shenzhen.nanshan.nanshanzufang',
+					filterSetting: Object.assign({}, this.filterSetting)
+				}, condition);
+				condition.filterSetting.keywords = condition.filterSetting.keywords.split('#').filter(item => item !== '');
+				condition.filterSetting.userBlackList = condition.filterSetting.userBlackList.split('#').filter(item => item !== '');
+				this.loading = true;
+				this.api.group.getTopics(condition).then(res => {
+					this.loading = false;
 					console.log(res);
 					if(res.data.err.level < 3){
 						const topicNames = Object.getOwnPropertyNames(res.data.data.filteredTopics);
@@ -181,6 +214,8 @@
 						this.gotoPage(1);
 						window.localStorage.setItem('topics', this.totalTopics);
 					}
+				}).catch(e => {
+					this.loading = false;
 				})
 			},
 			gotoPage (page){
@@ -200,6 +235,20 @@
 			cleanSearcher (){
 				this.searcher.keyword = '';
 				this.topicTable.data = this.searcher.originalList;
+			},
+			// 选择城市和小组
+			onCitySelect (params){
+				console.log('onCitySelect', params);
+				// 重新请求列表
+				this.getTopics(params);
+			},
+			// 过滤器
+			onFilterConfirm (filterSetting){
+				console.log('onFilterConfirm', filterSetting);
+				// 重新请求列表
+				this.getTopics({
+					filterSetting,
+				});
 			},
 		}
 	};
@@ -258,6 +307,12 @@
 					float: left;
 					.ivu-btn {
 						margin-right: 5px;
+					}
+				}
+				.center {
+					padding: 0 10px;
+					.item {
+						margin: 0 5px;
 					}
 				}
 				.right {

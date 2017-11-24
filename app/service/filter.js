@@ -17,10 +17,10 @@ module.exports = (app) => {
     }
 
     // 检查是否包含关键词
-    includeKeywords (str){
+    includeKeywords (str, keywords){
       let include = false;
-      for(let i=0, ilen=this.filterSetting.keywords.length; i<ilen; i++){
-        if(str.includes(this.filterSetting.keywords[i])){
+      for(let i=0, ilen=keywords.length; i<ilen; i++){
+        if(str.includes(keywords[i])){
           include = true;
           break;
         }
@@ -28,11 +28,22 @@ module.exports = (app) => {
       return include;
     }
 
-    filter (topics){
+    filter (topics, setting = {}){
+      const filterSetting = Object.assign({}, this.filterSetting, setting);
       const topicsNames = Object.getOwnPropertyNames(topics);
+      // 是否仅限女生
+      if(filterSetting.femaleOnly == '1'){
+        filterSetting.keywords = filterSetting.keywords.concat(['仅限女生', '限女', '只接受女生', '要求女生']);
+      }
+      console.log('>>> filter', filterSetting);
       topicsNames.forEach(name => {
         const topic = topics[name];
-        if(this.includeKeywords(topic.title) || this.includeKeywords(topic.content) || Number(topic.info.comments) > this.filterSetting.maxComments){
+        if(
+          this.includeKeywords(topic.user.name, filterSetting.userBlackList) || 
+          this.includeKeywords(topic.title, filterSetting.keywords) || 
+          this.includeKeywords(topic.content, filterSetting.keywords) || 
+          Number(topic.info.comments) >filterSetting.maxComments
+        ){
           delete topics[name];
         }
       });

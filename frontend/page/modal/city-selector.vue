@@ -1,10 +1,10 @@
 <template>
-	<Modal class="city-selector" title="切换城市" v-model="show">
+	<Modal class="city-selector" title="切换城市" v-model="show" @on-cancel="cancel" @on-ok="confirm">
 		<div v-if="currentCity">
 			<Tag type="border" :color="city.key === currentCity.key ? 'blue' : undefined" v-for="city, i in cities" :key="i" @click.native="selectedCityIndex=i;">{{ city.name }}</Tag>
 			<!-- 选择城市的小组 -->
 			<div class="divider"></div>
-			<Tag type="border" :color="group.key === selectedGroupIndex.key ? 'blue' : undefined" v-for="group, i in currentCity.groups" :key="i" @click.native="selectedGroupIndex=i;">{{ group.name }}</Tag>
+			<Tag type="border" :color="group.key === currentCity.groups[selectedGroupIndex].key ? 'blue' : undefined" v-for="group, i in currentCity.groups" :key="i" @click.native="selectedGroupIndex=i;">{{ group.name }}</Tag>
 		</div>
 	</Modal>
 </template>
@@ -24,6 +24,8 @@
 				cities: [],
 				selectedCityIndex: 0,
 				selectedGroupIndex: 0,
+				originSelectedCityIndex: 0,
+				originSelectedGroupIndex: 0,
 			};
 		},
 		computed: {
@@ -53,6 +55,17 @@
 						this.cities = res.data.data || [];
 					}
 				})
+			},
+			cancel (){
+				this.selectedCityIndex = this.originSelectedCityIndex;
+				this.selectedGroupIndex = this.originSelectedGroupIndex;
+			},
+			confirm (){
+				this.originSelectedCityIndex = this.selectedCityIndex;
+				this.originSelectedGroupIndex = this.selectedGroupIndex;
+				this.$emit('on-confirm', {
+					city: this.currentCity.key, group: this.currentCity.groups[this.selectedGroupIndex].key
+				});
 			},
 		},
 	};
