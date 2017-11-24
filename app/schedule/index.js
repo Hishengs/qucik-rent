@@ -1,11 +1,8 @@
 require("babel-register");
 
-process.setMaxListeners(Infinity);
-
-const getShenzhenTopics = require('./shenzhen.js');
-
-getShenzhenTopics();
-
+// 爬取深圳的租房帖子
+const fetchShenzhenTopics = require('./shenzhen/index.js');
+fetchShenzhenTopics();
 
 /*const Redis = require('ioredis');
 const cities = require('../city');

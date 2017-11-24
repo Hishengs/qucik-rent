@@ -42,7 +42,8 @@ module.exports = (app) => {
           this.includeKeywords(topic.user.name, filterSetting.userBlackList) || 
           this.includeKeywords(topic.title, filterSetting.keywords) || 
           this.includeKeywords(topic.content, filterSetting.keywords) || 
-          Number(topic.info.comments) >filterSetting.maxComments
+          (Number(topic.info.comments) > filterSetting.maxComments || 99999) || 
+          (Number(topic.info.likes) > filterSetting.maxLikes || 99999)
         ){
           delete topics[name];
         }
